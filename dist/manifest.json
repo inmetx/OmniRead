@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "OmniRead",
+  "version": "2.1",
+  "description": "智能网页翻译：支持离线 Gemini Nano、OpenAI/DeepSeek/Ollama 兼容、Google Translate、Microsoft Bing，四种引擎自由切换",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "https://translate-pa.googleapis.com/*",
+    "https://translate.googleapis.com/*",
+    "https://api-edge.cognitive.microsofttranslator.com/*",
+    "https://edge.microsoft.com/*"
+  ],
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "OmniRead",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["utils.js", "config.js", "provider.js", "cache.js", "content.js"]
+    }
+  ]
+}

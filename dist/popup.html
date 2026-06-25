@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 260px;
+      padding: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      margin: 0;
+    }
+
+    /* 标题行：标题左，图标按钮右 */
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .header h3 { margin: 0; font-size: 15px; color: #111; }
+    .icon-group { display: flex; gap: 4px; }
+    .icon-btn {
+      width: 28px; height: 28px; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; border-radius: 6px; background: transparent;
+      cursor: pointer; color: #666; font-size: 13px; line-height: 1;
+      transition: background .15s, color .15s;
+    }
+    .icon-btn:hover { background: #e9ecef; color: #007bff; }
+    .icon-btn .mode-text { font-weight: 600; letter-spacing: -.5px; }
+    .icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* 状态条 */
+    .status { font-size: 12px; text-align: center; padding: 6px; border-radius: 6px; margin-bottom: 8px; }
+    .status--ok  { background: #d4edda; color: #155724; }
+    .status--no  { background: #fff3cd; color: #856404; }
+    .status--err { background: #f8d7da; color: #721c24; }
+
+    /* 引擎选择 */
+    .engine-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 12px; }
+    .engine-row label { color: #666; flex-shrink: 0; }
+    select {
+      flex: 1; padding: 5px 6px; font-size: 12px;
+      border: 1px solid #d1d5db; border-radius: 5px; background: #fff; min-width: 0;
+    }
+
+    /* 语言选择 */
+    .lang-row {
+      display: flex; align-items: center; gap: 4px; margin-bottom: 10px; font-size: 12px;
+    }
+    .lang-row select { flex: 1; padding: 4px 4px; font-size: 11px; min-width: 0; }
+    .lang-row .arrow { color: #888; font-size: 12px; flex-shrink: 0; }
+
+    /* 主按钮 */
+    .btn-primary {
+      width: 100%; padding: 10px; border: none; border-radius: 6px;
+      font-size: 14px; font-weight: bold; cursor: pointer;
+    }
+    .btn-wrap { }
+    .btn-wrap .btn-primary { display: flex; align-items: center; justify-content: center; gap: 6px; padding-right: 10px; }
+    .shortcut-hint {
+      font-size: 10px; font-weight: bold; color: rgba(255,255,255,.6);
+      pointer-events: none; white-space: nowrap;
+    }
+    #translateBtn { background: #007bff; color: white; }
+    #translateBtn:hover { background: #0056b3; }
+    #translateBtn:disabled { background: #ccc; cursor: not-allowed; }
+    #stopBtn { background: #dc3545; color: white; display: none; margin-top: 8px; }
+    #stopBtn:hover { background: #b02a37; }
+
+    .error { color: #dc3545; font-size: 12px; margin-top: 8px; display: none; }
+    .warn  { color: #856404; font-size: 12px; margin-top: 8px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h3>OmniRead</h3>
+    <div class="icon-group">
+      <!-- 模式切换：点击切换 替换(Aa) / 双语(Aa文) -->
+      <button id="modeToggle" class="icon-btn" title="当前：替换模式（点击切换双语）">
+        <span class="mode-text">Aa</span>
+      </button>
+      <!-- 设置 -->
+      <button id="settingsBtn" class="icon-btn" title="设置">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="statusDisplay" class="status">检查状态...</div>
+
+  <div class="engine-row">
+    <label>引擎</label>
+    <select id="engineSelect"></select>
+  </div>
+
+  <div class="lang-row">
+    <select id="sourceLang">
+      <option value="auto">自动检测</option>
+      <option value="zh">中文</option>
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+      <option value="ko">한국어</option>
+    </select>
+    <span class="arrow">→</span>
+    <select id="targetLang">
+      <option value="zh">中文</option>
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+      <option value="ko">한국어</option>
+    </select>
+  </div>
+
+  <div class="btn-wrap">
+    <button id="translateBtn" class="btn-primary"><span id="btnText">翻译</span><span id="shortcutHint" class="shortcut-hint"></span></button>
+  </div>
+  <button id="stopBtn" class="btn-primary">显示原文</button>
+
+  <div id="warnMsg" class="warn"></div>
+  <div id="errorMsg" class="error"></div>
+
+  <script src="utils.js"></script>
+  <script src="config.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器 / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node（测试用，无依赖安装）
+node_modules/
+npm-debug.log*
+
+# 打包产物（按需保留 dist/，此处不忽略）
+# *.zip

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>OmniRead - 设置</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f6f8;
+      color: #333;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 4px; color: #111; }
+    .hint { color: #888; font-size: 13px; margin-bottom: 24px; }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card h2 { font-size: 15px; margin: 0 0 12px; color: #111; }
+
+    /* provider 列表 */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+    th { color: #888; font-weight: normal; font-size: 12px; }
+    td .mono { font-family: ui-monospace, monospace; color: #555; font-size: 12px; }
+    .badge {
+      display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px;
+    }
+    .badge--offline { background: #e0e7ff; color: #3730a3; }
+    .badge--openai  { background: #dcfce7; color: #166534; }
+    .badge--google  { background: #fef3c7; color: #92400e; }
+    .badge--bing    { background: #e0f2fe; color: #075985; }
+    .badge--default { background: #fef3c7; color: #92400e; margin-left: 6px; }
+
+    button {
+      padding: 6px 12px; border: 1px solid #d1d5db; background: #fff; border-radius: 5px;
+      font-size: 13px; cursor: pointer; color: #333;
+    }
+    button:hover { background: #f3f4f6; }
+    button.primary { background: #007bff; color: #fff; border-color: #007bff; }
+    button.primary:hover { background: #0056b3; }
+    button.danger { color: #dc3545; border-color: #fecaca; }
+    button.danger:hover { background: #fef2f2; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+
+    .actions { margin-top: 14px; }
+
+    /* 新增/编辑表单 */
+    .form-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4);
+      align-items: center; justify-content: center; z-index: 10;
+    }
+    .form-overlay.show { display: flex; }
+    .form-card {
+      background: #fff; border-radius: 10px; padding: 24px; width: 460px; max-width: 92vw;
+    }
+    .form-card h2 { margin: 0 0 16px; font-size: 16px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+    .field input, .field select {
+      width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 5px;
+      font-size: 13px; box-sizing: border-box;
+    }
+    .field .row { display: flex; gap: 8px; }
+    .field .row > * { flex: 1; }
+    .pw-wrap { position: relative; }
+    .pw-toggle {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; padding: 2px 6px; font-size: 12px; color: #666;
+      cursor: pointer;
+    }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+    .err { color: #dc3545; font-size: 12px; margin-top: 8px; min-height: 16px; }
+
+    .test-result { font-size: 12px; margin-top: 8px; min-height: 16px; }
+    .test-result.ok  { color: #166534; }
+    .test-result.bad { color: #dc3545; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>翻译引擎设置</h1>
+    <div class="hint">默认使用 Chrome 内置 Gemini Nano（离线、免费、慢）。添加 OpenAI 兼容引擎可获得数倍速度提升。</div>
+
+    <div class="card">
+      <h2>已配置的引擎</h2>
+      <table id="providerTable">
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th>类型</th>
+            <th>端点 / 模型</th>
+            <th style="width:220px;">操作</th>
+          </tr>
+        </thead>
+        <tbody id="providerBody"></tbody>
+      </table>
+      <div class="actions">
+        <button class="primary" id="addBtn">+ 添加 OpenAI 兼容引擎</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>翻译缓存</h2>
+      <div style="font-size:13px; color:#555; margin-bottom:10px;">
+        已缓存 <span id="cacheCount" style="font-weight:bold; color:#111;">0</span> 条译文。
+        <span class="hint" style="display:inline;">命中缓存时不调用模型，节省 token 与时间。</span>
+      </div>
+      <button class="danger" id="clearCacheBtn">清除全部缓存</button>
+    </div>
+
+    <div class="card">
+      <h2>快捷键</h2>
+      <div class="field">
+        <label>网页翻译快捷键（点击输入框后按下 desired 组合键）</label>
+        <input id="shortcutInput" type="text" readonly placeholder="按下单个键..." style="cursor:pointer;font-family:ui-monospace,monospace;">
+      </div>
+      <div class="hint" style="margin-bottom:10px;">支持修饰键：<code>Ctrl</code>、<code>Shift</code>、<code>Alt</code>、<code>Meta</code>（Command）。例如 <code>Ctrl+Shift+T</code>。</div>
+      <div style="display:flex;gap:8px;">
+        <button class="primary" id="saveShortcutBtn">保存</button>
+        <button id="resetShortcutBtn">恢复默认</button>
+      </div>
+      <div id="shortcutMsg" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>常见兼容服务参考</h2>
+      <table>
+        <thead><tr><th>服务</th><th>baseURL</th><th>model 示例</th></tr></thead>
+        <tbody>
+          <tr><td>OpenAI</td><td class="mono">https://api.openai.com/v1</td><td class="mono">gpt-4o-mini</td></tr>
+          <tr><td>DeepSeek</td><td class="mono">https://api.deepseek.com/v1</td><td class="mono">deepseek-chat</td></tr>
+          <tr><td>硅基流动</td><td class="mono">https://api.siliconflow.cn/v1</td><td class="mono">Qwen/Qwen2.5-7B-Instruct</td></tr>
+          <tr><td>本地 Ollama</td><td class="mono">http://localhost:11434/v1</td><td class="mono">qwen2.5:7b</td></tr>
+        </tbody>
+      </table>
+      <div class="hint" style="margin-top:10px;">提示：baseURL 末尾的 /v1 可写可不写，插件会自动补全。Ollama 需先 <span class="mono">ollama serve</span> 并启用 CORS（OLLAMA_ORIGINS=*）。</div>
+    </div>
+  </div>
+
+  <!-- 新增/编辑表单弹层 -->
+  <div class="form-overlay" id="formOverlay">
+    <div class="form-card">
+      <h2 id="formTitle">添加引擎</h2>
+      <div class="field">
+        <label>显示名称</label>
+        <input id="f_name" placeholder="如：DeepSeek / 我的 GPT">
+      </div>
+      <div class="field">
+        <label>baseURL（接口地址）</label>
+        <input id="f_baseURL" placeholder="https://api.deepseek.com/v1">
+      </div>
+      <div class="field">
+        <label>API Key</label>
+        <div class="pw-wrap">
+          <input id="f_apiKey" type="password" placeholder="sk-...（本地 Ollama 可留空）">
+          <button class="pw-toggle" id="pwToggle">显示</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>模型名（model）</label>
+        <input id="f_model" placeholder="deepseek-chat / gpt-4o-mini">
+      </div>
+      <div class="field">
+        <label>temperature（可选，默认 0.1）</label>
+        <input id="f_temperature" type="number" step="0.1" value="0.1">
+      </div>
+      <div class="test-result" id="testResult"></div>
+      <div class="err" id="formErr"></div>
+      <div class="form-actions">
+        <button id="testBtn">测试连接</button>
+        <button id="cancelBtn">取消</button>
+        <button class="primary" id="saveBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="utils.js"></script>
+  <script src="config.js"></script>
+  <script src="provider.js"></script>
+  <script src="cache.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
